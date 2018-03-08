@@ -1,0 +1,9 @@
+{
+  "name": "automated_scraper",
+  "version": "0.1.0",
+  "description": "Automated scraper setup",
+  "author": "Chris Pauley",
+  "dependencies": {
+    "puppeteer": "^0.13.0"
+  }
+}
