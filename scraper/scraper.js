@@ -10,13 +10,13 @@ exports.ScrapingUtility = ScrapingUtility;
 exports.Scraper = class {
     /**
         Usage:
-            const blair = new Scraper(async function(){
+            const autoscraper = new Scraper(async function(){
                 // Do Stuff...
 
                 // Output the result
-                fs.writeFileSync('/dev/stdout',JSON.stringify(await blair.build_result()));
+                fs.writeFileSync('/dev/stdout',JSON.stringify(await autoscraper.build_result()));
             });
-            await blair.run();
+            await autoscraper.run();
     **/
     constructor(config_filename, callback, dont_quit = false) {
         if (typeof config_filename != "string" && !callback) {
