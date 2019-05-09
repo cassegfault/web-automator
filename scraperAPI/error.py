@@ -1,4 +1,4 @@
-from base import build_query, APIEndpoint
+from scraperAPI.base import build_query, APIEndpoint
 
 class APIError(APIEndpoint):
 	type_name = "errors"

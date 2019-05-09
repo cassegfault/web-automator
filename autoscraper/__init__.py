@@ -1,10 +1,11 @@
 from scraperAPI import ScraperAPI
-from utils import debug_log, force_utf8
+from autoscraper.utils import force_utf8
+from collections import defaultdict
 from datetime import datetime
 import time
 import json
 import subprocess
-import oursql
+import mysql.connector
 
 from email.mime.text import MIMEText
 import smtplib
@@ -15,27 +16,31 @@ class Automator():
 		self.did_error = False
 		self.load_config(config_filename)
 		self.api = ScraperAPI()
-		self.conn = oursql.connect(host=self.config['db_host'], user=self.config['db_user'], passwd=self.config['db_password'], db=self.config['database'], raise_on_warnings=False)
+		self.conn = mysql.connector.connect(host=self.config['db_host'], user=self.config['db_user'], password=self.config['db_password'], database=self.config['database'], raise_on_warnings=False)
 		self.c = self.conn.cursor()
+		self.last_run_types = []
 
 	def load_config(self,config_filename):
 		self.config = {}
 		with open(config_filename) as config_file:
 			self.config = json.load(config_file)
 
-	def debug_log(*args):
+	def debug_log(self, *args):
 		if 'debug' in self.config and self.config['debug']:
-			print args
+			print(args)
+	
+	def update_server_status(self, status):
+		print(status)
 
 	def error_check(self):
-		self.c.execute("SELECT count(*), returned_error FROM requests WHERE `sent_by`='%s' AND date_added > DATE_SUB(NOW(), INTERVAL 7 DAY)" % config['name'])
+		self.c.execute("SELECT count(*), returned_error FROM requests WHERE `sent_by`='%s' AND date_added > DATE_SUB(NOW(), INTERVAL 7 DAY)" % self.config['name'])
 		w_rows = self.c.fetchall()
 		week_requests = w_rows[0][0]
 		self.did_error = (w_rows[0][1] > 0)
 
-		weekly_allotment = config["weekly_request_limit"]
+		weekly_allotment = self.config["weekly_request_limit"]
 
-		self.c.execute("SELECT count(*) FROM requests WHERE `sent_by`='%s' AND  date_added > DATE_SUB(NOW(), INTERVAL 18 HOUR)" % config['name'])
+		self.c.execute("SELECT count(*) FROM requests WHERE `sent_by`='%s' AND  date_added > DATE_SUB(NOW(), INTERVAL 18 HOUR)" % self.config['name'])
 		t_rows = self.c.fetchall()
 		today_requests = t_rows[0][0]
 
@@ -47,15 +52,15 @@ class Automator():
 
 		if week_requests > weekly_allotment or today_requests > (weekly_allotment / 7) or self.did_error:
 			# we're out of requests for the week, we can start sleeping longer
-			debug_log( "Stopping requests for the week due to an error or number of requests", self.did_error, today_requests, weekly_allotment )
+			self.debug_log( "Stopping requests for the week due to an error or number of requests", self.did_error, today_requests, weekly_allotment )
 			if self.did_error:
-				update_server_status('Sleeping due to an error')
+				self.update_server_status('Sleeping due to an error')
 			else:
-				update_server_status('Sleeping due to requests')
+				self.update_server_status('Sleeping due to requests')
 			self.did_error = True
 
 	def raise_error(self, error, save_error=True):
-		if isinstance(error, basestring):
+		if isinstance(error, str):
 			error = { 'error': error }
 		
 		if save_error:
@@ -83,13 +88,13 @@ class Automator():
 			additional_parameters = json.loads(job['additional_parameters'])
 			# Make sure the right bots run the right jobs
 			if 'only_bot' in additional_parameters:
-				if 'name' in config and additional_parameters['only_bot'] != config['name']:
+				if 'name' in self.config and additional_parameters['only_bot'] != self.config['name']:
 					continue
-			elif 'only_directed_jobs' in config and config['only_directed_jobs']:
+			elif 'only_directed_jobs' in self.config and self.config['only_directed_jobs']:
 				continue
 
-			if 'accept_tasks' in config:
-				if job['script'] not in config['accept_tasks']:
+			if 'accept_tasks' in self.config:
+				if job['script'] not in self.config['accept_tasks']:
 					continue
 
 			if job['schedule_type'] == 'once' and job['date_completed'] is not None:
@@ -118,17 +123,19 @@ class Automator():
 		# This is a good place for finer grain prioritization
 
 	def handle_response(self, result={}):
-		debug_log("Handling Response")
+		self.debug_log("Handling Response")
 		did_error = False
 		if "output" in result:
 			did_error = self.api.handle_response(result, task_id=self.current_job["id"], name=self.config['name'])
 
 		if "error" in result:
 			self.raise_error(json.dumps(result["error"]))
-			debug_log("response contained error")
+			self.debug_log("response contained error")
 
 		if did_error:
 			self.raise_error("Error encountered in logs", save_error=False)
+		
+		return did_error
 
 	def run_job(self,job):
 		self.api.task.update_by_fields(item={ 'id':job['id'], 'date_started':'RAW:CURRENT_TIMESTAMP' })
@@ -147,7 +154,7 @@ class Automator():
 		process = subprocess.Popen([ self.config['node_location'],
 									'scraper/scripts/' + script + '.js', 
 									job["additional_parameters"],
-									config['filename'] ], 
+									self.config['filename'] ], 
 									stdout=subprocess.PIPE)
 
 		# The subprocess only sends one line.
@@ -181,8 +188,8 @@ class Automator():
 		did_error = False
 		try:
 			did_error = self.handle_response(full_response)
-		except oursql.ProgrammingError as strerr:
-			self.raise_error({ 'task_id':job['id'], 'error':'Error handling result from JSON: ' + str(force_utf8(strerr)) + ' \n\n' + full_line })
+		except mysql.connector.ProgrammingError as strerr:
+			self.raise_error({ 'task_id':job['id'], 'error':'Error handling result from JSON: ' + str(force_utf8(strerr)) + ' \n\n' + final_line })
 
 		if did_error:
 			self.raise_error("Encountered an error while handling results", save_error=False)
@@ -209,11 +216,11 @@ class Automator():
 
 	def run(self):
 		self.is_running = True
-		debug_log( 'startup at ', datetime.now() )
+		self.debug_log( 'startup at ', datetime.now() )
 
 		while self.is_running:
 			if self.is_business_hours() == False or self.did_error:
-				debug_log('sleeping')
+				self.debug_log('sleeping')
 				time.sleep(60*5) # Sleep for 5 min
 				self.error_check()
 				continue
@@ -221,7 +228,7 @@ class Automator():
 			self.build_queue()
 			
 			if len(self.job_list) < 1:
-				debug_log('no jobs')
+				self.debug_log('no jobs')
 				time.sleep(30)
 			else:
 				for job in self.job_list:

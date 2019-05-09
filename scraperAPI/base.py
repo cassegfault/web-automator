@@ -1,6 +1,6 @@
-import oursql
+import mysql.connector
 import json
-from utils import map_row
+from scraperAPI.utils import map_row
 
 def get_config(): 
 	config = {}
@@ -28,7 +28,7 @@ def build_query(action='select', table='', fields={}, where={}, group=None, sort
 		query += "(%s)" % ','.join(['`%s`' % field for field in fields.keys()])
 		vals = []
 		for v in fields.values():
-			if isinstance(v,basestring) and v.startswith("RAW:"):
+			if isinstance(v,str) and v.startswith("RAW:"):
 				vals.append(v.replace("RAW:",''))
 			else:
 				vals.append('?')
@@ -43,7 +43,7 @@ def build_query(action='select', table='', fields={}, where={}, group=None, sort
 		query += " SET "
 		vals = []
 		for k,v in fields.iteritems():
-			if isinstance(v,basestring) and v.startswith("RAW:"):
+			if isinstance(v,str) and v.startswith("RAW:"):
 				vals.append('`%s`=%s' % (k, v.replace("RAW:",'')))
 			else:
 				vals.append('`%s`=?' % (k,))
@@ -82,7 +82,7 @@ def build_query(action='select', table='', fields={}, where={}, group=None, sort
 							where_strs.append('`%s` %s ?') % (key, val['operator'])
 							params.append(where_val)
 					except:
-						print "Comparison operator incorrectly setup, use 'value' and 'operator' fields"
+						print("Comparison operator incorrectly setup, use 'value' and 'operator' fields")
 				elif val is None:
 					where_strs.append('%s IS NULL' % (key))
 				else:
@@ -91,7 +91,7 @@ def build_query(action='select', table='', fields={}, where={}, group=None, sort
 					params.append(val)
 			query += "%s" % (' ' + where_operator + ' ').join(where_strs)
 			parameters += params
-	elif isinstance(where,basestring):
+	elif isinstance(where,str):
 		query += " WHERE " + where
 
 	if sort is not None:
@@ -110,7 +110,7 @@ class APIDBConnection:
 	def __init__(self):
 		if not APIDBConnection.instance:
 			config = get_config()
-			APIDBConnection.instance = self.connection = oursql.connect(host=config['db_host'], user=config['db_user'], passwd=config['db_password'], db=config['database'], autoping=True, raise_on_warnings=False)
+			APIDBConnection.instance = self.connection = mysql.connector.connect(host=config['db_host'], user=config['db_user'], password=config['db_password'], database=config['database'], autoping=True, raise_on_warnings=False)
 	def __getattr__(self, name):
 		return getattr(self.instance, name)
 

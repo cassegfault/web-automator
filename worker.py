@@ -15,7 +15,7 @@ try:
 		config = json.load(config_file)
 		config['filename'] = config_filename
 except IOError:
-	print "There was an error opening the configuration file: ", config_filename
+	print("There was an error opening the configuration file: ", config_filename)
 	sys.exit()
 
 

@@ -1,5 +1,5 @@
 def force_utf8(s):
-    if not isinstance(s, basestring):
+    if not isinstance(s, str):
         return s
     try:
         s = s.decode('utf-8', 'replace')

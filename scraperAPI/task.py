@@ -1,4 +1,4 @@
-from base import build_query, APIEndpoint
+from scraperAPI.base import build_query, APIEndpoint
 
 class Task(APIEndpoint):
 	type_name = "tasks"
@@ -25,6 +25,6 @@ class Task(APIEndpoint):
 		self.conn.commit()
 		return self.c.lastrowid
 
-	def get_current_tasks():
+	def get_current_tasks(self):
 		where = "(date_next_run IS NULL OR date_next_run < NOW()) AND currently_running=0"
 		return self.get_by_fields(fields=where, sort='priority', sort_direction='ASC')

@@ -1,9 +1,10 @@
-from task import Task
-from error import APIError
-from log import Log
-from request import Request
+import json
+from scraperAPI.task import Task
+from scraperAPI.error import APIError
+from scraperAPI.log import Log
+from scraperAPI.request import Request
 
-from base import get_config
+from scraperAPI.base import get_config
 
 class ScraperAPI:
 	def __init__(self):
@@ -13,7 +14,7 @@ class ScraperAPI:
 		self.request = Request()
 		self.config = get_config()
 
-	def handle_response(self, result, task_id=None, name):
+	def handle_response(self, result, task_id, name):
 		did_error = False
 		if "output" in result:
 			output = result["output"]
@@ -33,7 +34,7 @@ class ScraperAPI:
 						if 'captcha' in url:
 							self.error.insert({ 'error': "scraperAPI discovered a captcha in a request when processing the logs of task " + task_id })
 							did_error = True
-				self.log.insert({ 'log_json':json.dumps(result["logs"]), 'task_id':task_id })
+				self.log.insert({ 'log_json': json.dumps(result["logs"]), 'task_id':task_id })
 
 		# This allows the autoscraper to know immediately to stop scraping
 		return did_error
