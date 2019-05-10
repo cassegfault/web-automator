@@ -2,7 +2,7 @@ from scraperAPI.database import DBAdapterCursor, DBAdapter, build_sql_query
 import mysql.connector
 class MySQLDBCursor(DBAdapterCursor):
 	__cursor = None
-	def __constructor__(self, connection):
+	def __init__(self, connection):
 		self.__cursor = connection.raw_connection.cursor()
 	
 	def __convert_query_params(self,query):
@@ -50,7 +50,7 @@ class MySQLDBCursor(DBAdapterCursor):
 
 class MySQLDB(DBAdapter):
 	__connection = None
-	def __constructor__(self, config):
+	def __init__(self, config):
 		self.__connection = mysql.connector.connect(host=config['db_host'], user=config['db_user'], password=config['db_password'], database=config['database'], autoping=True, raise_on_warnings=False)
 
 	def cursor(self):

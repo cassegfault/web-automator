@@ -3,7 +3,7 @@ import sqlite3
 
 class sqliteDBCursor(DBAdapterCursor):
 	__cursor = None
-	def __constructor__(self, connection):
+	def __init__(self, connection):
 		self.__cursor = connection.raw_connection.cursor()
 
 	def execute(self, query, args):
@@ -44,7 +44,7 @@ class sqliteDBCursor(DBAdapterCursor):
 
 class sqliteDB(DBAdapter):
 	__connection = None
-	def __constructor__(self, config):
+	def __init__(self, config):
 		self.__connection = sqlite3.connect(database=config['db_filename'])
 
 	def cursor(self):

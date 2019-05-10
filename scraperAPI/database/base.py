@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 class DBAdapter(ABC):
 	__connection = None
 	@abstractmethod
-	def __constructor__(self, config):
+	def __init__(self, config):
 		pass
 	
 	@abstractmethod
@@ -31,13 +31,16 @@ class DBAdapter(ABC):
 	
 	def raw_connection(self):
 		return self.__connection
+	
+	def __del__(self):
+		self.close()
 
 # Defines a cursor wrapper for each DB implementation
 class DBAdapterCursor(ABC):
 	__cursor = None
 	# Must implement a constructor which instantiates the raw cursor
 	@abstractmethod
-	def __constructor__(self, connection):
+	def __init__(self, connection):
 		pass
 	
 	# execute some query with an undefined number of arguments
@@ -94,3 +97,6 @@ class DBAdapterCursor(ABC):
 	# return the raw cursor
 	def raw_cursor(self):
 		return self.__cursor
+	
+	def __del__(self):
+		self.close()
