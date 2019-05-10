@@ -1,6 +1,6 @@
-import mysql.connector
 import json
 from scraperAPI.utils import map_row
+from scraperAPI.database import MySQLDB, sqliteDB
 
 def get_config(): 
 	config = {}
@@ -14,7 +14,11 @@ class APIDBConnection:
 	def __init__(self):
 		if not APIDBConnection.instance:
 			config = get_config()
-			APIDBConnection.instance = self.connection = mysql.connector.connect(host=config['db_host'], user=config['db_user'], password=config['db_password'], database=config['database'], autoping=True, raise_on_warnings=False)
+			if 'db_filename' in config:
+				self.connection = sqliteDB(config)
+			else:
+				self.connection = MySQLDB(config)
+			APIDBConnection.instance = self.connection
 	def __getattr__(self, name):
 		return getattr(self.instance, name)
 
