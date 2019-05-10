@@ -7,12 +7,12 @@ from scraperAPI.request import Request
 from scraperAPI.base import get_config
 
 class ScraperAPI:
-	def __init__(self):
+	def __init__(self, config=None):
 		self.task = Task()
 		self.error = APIError()
 		self.log = Log()
 		self.request = Request()
-		self.config = get_config()
+		self.config = get_config() if config is None else config
 
 	def handle_response(self, result, task_id, name):
 		did_error = False
