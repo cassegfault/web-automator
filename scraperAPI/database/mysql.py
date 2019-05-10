@@ -1,5 +1,4 @@
-from scraperAPI.database import DBAdapterCursor, DBAdapter
-from scraperAPI.database.SQLBuildQuery import build_sql_query
+from scraperAPI.database import DBAdapterCursor, DBAdapter, build_sql_query
 import mysql.connector
 class MySQLDBCursor(DBAdapterCursor):
 	__cursor = None
