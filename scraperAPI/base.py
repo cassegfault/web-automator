@@ -28,7 +28,7 @@ class APIEndpoint(object):
 		self.conn = APIDBConnection()
 		self.c = self.conn.cursor()
 		
-		self.type_description = self.c.describe(self.type_name)
+		self.type_description = self.c.table_definition(self.type_name)
 
 	def limit_fields(self, fields):
 		if isinstance(fields, dict):
@@ -50,7 +50,7 @@ class APIEndpoint(object):
 		limit = limit or self.default_limit
 		self.c.buildAndExecute(action='select', table=self.type_name, fields=self.type_description, limit=limit, sort=sort, sort_direction=sort_direction)
 		
-		query_description = self.c.description
+		query_description = self.c.description()
 
 		for raw in self.c.fetchall():
 			row = map_row(query_description, raw)
@@ -66,7 +66,7 @@ class APIEndpoint(object):
 			where_dict = fields
 		self.c.buildAndExecute(action='select', table=self.type_name, fields=self.type_description, where=where_dict, sort=sort, sort_direction=sort_direction)
 		
-		query_description = self.c.description
+		query_description = self.c.description()
 
 		all_results = []
 		for raw in self.c.fetchall():
@@ -92,10 +92,9 @@ class APIEndpoint(object):
 		if len(existing_items) > 0:
 			self.update_by_fields(fields, where_key=where_key)
 		else:
-			query, params = build_query(action='insert', table=self.type_name, fields=fields)
-			self.c.execute(query,params)
+			self.c.buildAndExecute(action='insert', table=self.type_name, fields=fields)
 			self.conn.commit()
-		return self.c.lastrowid
+		return self.c.lastrowid()
 
 	def update_by_fields(self, item, fields=None, where_key='id'):	
 		fields = self.limit_fields(fields)
@@ -104,24 +103,21 @@ class APIEndpoint(object):
 			fields = {}
 			fields[where_key] = item[where_key]
 
-		query, params = build_query(action='update', table=self.type_name, fields=item, where=fields)
-		self.c.execute(query,params)
+		self.c.buildAndExecute(action='update', table=self.type_name, fields=item, where=fields)
 		self.conn.commit()
-		return self.c.lastrowid
+		return self.c.lastrowid()
 	
 	def insert(self, item, ignore=False):
 		item = self.limit_fields(item)
-		query, params = build_query(action='insert', table=self.type_name, fields=item, ignore=ignore)
-		self.c.execute(query,params)
+		self.c.buildAndExecute(action='insert', table=self.type_name, fields=item, ignore=ignore)
 		self.conn.commit()
-		return self.c.lastrowid
+		return self.c.lastrowid()
 
 	def insert_many(self, items):
 		return_ids = []
 		for item in items:
 			item = self.limit_fields(item)
-			query, params = build_query(action='insert', table=self.type_name, fields=item)
-			self.c.execute(query,params)
-			return_ids.append(self.c.lastrowid)
+			self.c.buildAndExecute(action='insert', table=self.type_name, fields=item)
+			return_ids.append(self.c.lastrowid())
 		self.conn.commit()
 		return return_ids
