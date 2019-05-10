@@ -31,7 +31,10 @@ class MySQLDBCursor(DBAdapterCursor):
 	def close(self):
 		return self.__cursor.close()
 
-	def describe(self, table_name):
+	def description(self):
+		return self.__cursor.description
+
+	def table_definition(self, table_name):
 		self.execute("DESCRIBE ?", table_name)
 		type_description = {}
 		for row in self.fetchall():

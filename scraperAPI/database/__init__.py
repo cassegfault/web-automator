@@ -71,11 +71,16 @@ class DBAdapterCursor(ABC):
 	def close(self):
 		pass
 	
-	# return the description of the table
+	# return the description of the result set
 	@abstractmethod
-	def describe(self):
+	def description(self):
 		pass
 	
+	# returns a mapping of column name to type of the given table
+	@abstractmethod
+	def table_definition(self, table_name):
+		pass
+
 	# return the last update or insert row ID
 	@abstractmethod
 	def lastrowid(self):
