@@ -33,7 +33,10 @@ class MySQLDBCursor(DBAdapterCursor):
 
 	def describe(self, table_name):
 		self.execute("DESCRIBE ?", table_name)
-		return self.fetchall()
+		type_description = {}
+		for row in self.fetchall():
+			type_description[row[0]] = row[1]
+		return type_description
 	
 	def lastrowid(self):
 		return self.__cursor.lastrowid

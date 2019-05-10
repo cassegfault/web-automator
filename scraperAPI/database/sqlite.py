@@ -28,7 +28,10 @@ class sqliteDBCursor(DBAdapterCursor):
 
 	def describe(self, table_name):
 		self.execute("PRAGMA table_info(?)",table_name)
-		return self.fetchall()
+		type_description = {}
+		for row in self.fetchall():
+			type_description[row[1]] = row[2]
+		return type_description
 	
 	def lastrowid(self):
 		return self.__cursor.lastrowid
