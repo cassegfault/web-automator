@@ -4,7 +4,7 @@
 # is a table name.
 # For any more specific work on the enpoint, queries
 # should be written and maintained in the endpoint code
-def build_query(action='select', table='', fields={}, where={}, group=None, sort=None, sort_direction='DESC', limit=None, ignore=False):
+def build_sql_query(action='select', table='', fields={}, where={}, group=None, sort=None, sort_direction='DESC', limit=None, ignore=False):
 	parameters = []
 	query = ""
 	
@@ -90,6 +90,6 @@ def build_query(action='select', table='', fields={}, where={}, group=None, sort
 	if limit is not None:
 		query += " LIMIT %s" % limit
 
-	# returns query ready for opensql with ?'s for values
-	# and parameters in order they appear in the query
+	# returns query with ?'s for values and parameters
+	# in order they appear in the query
 	return query, parameters
