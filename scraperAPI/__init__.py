@@ -4,15 +4,18 @@ from scraperAPI.error import APIError
 from scraperAPI.log import Log
 from scraperAPI.request import Request
 
-from scraperAPI.base import get_config
+from scraperAPI.base import Config, APIDBConnection
 
 class ScraperAPI:
-	def __init__(self, config=None):
+	def __init__(self, config_json=None, config_filename=None):
+		self.config = Config(config_json=config_json, config_filename=config_filename)
 		self.task = Task()
 		self.error = APIError()
 		self.log = Log()
 		self.request = Request()
-		self.config = get_config() if config is None else config
+	
+	def get_db_connection(self):
+		return APIDBConnection()
 
 	def handle_response(self, result, task_id, name):
 		did_error = False

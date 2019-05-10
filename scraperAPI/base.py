@@ -2,25 +2,38 @@ import json
 from scraperAPI.utils import map_row
 from scraperAPI.database import MySQLDB, sqliteDB
 
-def get_config(): 
+class Config:
 	config = {}
-	with open('config.json') as config_file:
-		config = json.load(config_file)
-	return config
+	instance = None
+	def __init__(self, config_json=None, config_filename='config.json'):
+		if not Config.instance:
+			if config_json is None:
+				with open(config_filename) as config_file:
+					self.config = json.load(config_file)
+			else:
+				self.config = config_json
+			Config.instance = self.config
+	
+	def __getattr__(self,name):
+		return getattr(self.instance, name)
+	
+	def __getitem__(self, idx):
+		return Config.instance[idx]
 
 # Singleton DB connection so I don't leave a million open
 class APIDBConnection:
 	instance = None
 	def __init__(self):
 		if not APIDBConnection.instance:
-			config = get_config()
-			if 'db_filename' in config:
+			config = Config()
+			if 'db_filename' in config.keys():
 				self.connection = sqliteDB(config)
 			else:
 				self.connection = MySQLDB(config)
 			APIDBConnection.instance = self.connection
+
 	def __getattr__(self, name):
-		return getattr(self.instance, name)
+		return getattr(APIDBConnection.instance, name)
 
 
 # Gives every type a DB connection and basic functionality

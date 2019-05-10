@@ -3,21 +3,24 @@ import mysql.connector
 class MySQLDBCursor(DBAdapterCursor):
 	__cursor = None
 	def __init__(self, connection):
-		self.__cursor = connection.raw_connection.cursor()
+		self.__cursor = connection.cursor()
 	
 	def __convert_query_params(self,query):
 		return query.replace('?','%s')
 
 	def execute(self, query, args):
 		query = self.__convert_query_params(query)
-		return self.__cursor.execute(query, args)
+		if args is None:
+			return self.__cursor.execute(query)
+		else:
+			return self.__cursor.execute(query, args)
 
 	def executeMany(self, query, data):
 		query = self.__convert_query_params(query)
 		return self.__cursor.executeMany(query, data)
 	
 	def buildAndExecute(self, **kwargs):
-		query, params = build_sql_query(*kwargs)
+		query, params = build_sql_query(**kwargs)
 		query = self.__convert_query_params(query)
 		return self.__cursor.execute(query,params)
 	
@@ -28,7 +31,11 @@ class MySQLDBCursor(DBAdapterCursor):
 		return self.__cursor.fetchall()
 	
 	def close(self):
-		return self.__cursor.close()
+		try:
+			return self.__cursor.close()
+		except mysql.connector.ProgrammingError:
+			# Already closed
+			return
 
 	def description(self):
 		return self.__cursor.description
@@ -66,4 +73,8 @@ class MySQLDB(DBAdapter):
 		return self.__connection.ping()
 	
 	def close(self):
-		return self.__connection.close()
+		try:
+			return self.__connection.close()
+		except mysql.connector.ProgrammingError:
+			# Already closed
+			return
