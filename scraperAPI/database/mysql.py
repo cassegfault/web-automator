@@ -9,9 +9,9 @@ class MySQLDBCursor(DBAdapterCursor):
 	def __convert_query_params(self,query):
 		return query.replace('?','%s')
 
-	def execute(self, query, *args):
+	def execute(self, query, args):
 		query = self.__convert_query_params(query)
-		return self.__cursor.execute(query, *args)
+		return self.__cursor.execute(query, args)
 
 	def executeMany(self, query, data):
 		query = self.__convert_query_params(query)

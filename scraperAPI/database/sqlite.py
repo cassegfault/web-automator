@@ -7,8 +7,8 @@ class sqliteDBCursor(DBAdapterCursor):
 	def __constructor__(self, connection):
 		self.__cursor = connection.raw_connection.cursor()
 
-	def execute(self, query, *args):
-		return self.__cursor.execute(query, *args)
+	def execute(self, query, args):
+		return self.__cursor.execute(query, args)
 
 	def executeMany(self, operation, data):
 		return self.__cursor.executeMany(operation, data)

@@ -42,7 +42,7 @@ class DBAdapterCursor(ABC):
 	
 	# execute some query with an undefined number of arguments
 	@abstractmethod
-	def execute(self, query, *args):
+	def execute(self, query, args):
 		pass
 	
 	# execute the same query over a list of argument sets
