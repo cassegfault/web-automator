@@ -1,10 +1,9 @@
-from scraperAPI.base import build_query, APIEndpoint
+from scraperAPI.base import APIEndpoint
 
 class Task(APIEndpoint):
 	type_name = "tasks"
 
 	def __init__(self):
-		# asdf
 		super(Task,self).__init__()
 
 	def mark_complete(self, task):

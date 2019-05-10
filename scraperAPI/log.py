@@ -1,4 +1,4 @@
-from scraperAPI.base import build_query, APIEndpoint
+from scraperAPI.base import APIEndpoint
 
 class Log(APIEndpoint):
 	type_name = "task_logs"
